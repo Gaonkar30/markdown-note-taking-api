@@ -3,13 +3,14 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const app = express();
+const bodyParser = require('body-parser');
 const axios = require("axios");
 const upload = multer({ dest: "uploads/" });
 const PORT = 3000 || process.env.PORT;
 app.listen(PORT, () => {
   console.log(`app listening on {PORT}`);
 });
-
+app.use(bodyParser.json());
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
 app.post("/grammer-check", async (req, res) => {
@@ -32,3 +33,12 @@ app.post("/grammer-check", async (req, res) => {
     res.status(500).send("Error checking grammar");
   }
 });
+app.post('/savenote',async(req,res)=>{
+  const content=req.body.content
+  const title=req.body.title
+  const filename=path.join(__dirname+'notes'+`${title}.md`);
+  fs.writeFile(filename,content,(err)=>{
+    if(err) throw err;
+    res.json({ status: 'success', message: 'Note saved successfully' });
+  })
+})
