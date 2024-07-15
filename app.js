@@ -5,16 +5,20 @@ const fs = require("fs");
 const app = express();
 const bodyParser = require('body-parser');
 const axios = require("axios");
-const upload = multer({ dest: "uploads/" });
 const marked = require('marked');
-const PORT = 3000 || process.env.PORT;
-app.listen(PORT, () => {
-  console.log(`app listening on {PORT}`);
-});
+
+
+const PORT = process.env.PORT || 3000;
+
 app.use(bodyParser.json());
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
-app.post("/grammer-check", async (req, res) => {
+
+app.listen(PORT, () => {
+  console.log(`App listening on port ${PORT}`);
+});
+
+app.post("/grammar-check", async (req, res) => {
   const { text } = req.body;
   try {
     const response = await axios.post("https://api.languagetool.org/v2/check", {
@@ -34,24 +38,29 @@ app.post("/grammer-check", async (req, res) => {
     res.status(500).send("Error checking grammar");
   }
 });
-app.post('/savenote',async(req,res)=>{
-  const content=req.body.content
-  const title=req.body.title
-  const filename=path.join(__dirname+'notes'+`${title}.md`);
-  fs.writeFile(filename,content,(err)=>{
-    if(err) throw err;
+
+app.post('/savenote', async (req, res) => {
+  const { content, title } = req.body;
+  const filename = path.join(__dirname, 'notes', `${title}.md`);
+  fs.writeFile(filename, content, (err) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ status: 'error', message: 'Failed to save note' });
+    }
     res.json({ status: 'success', message: 'Note saved successfully' });
-  })
+  });
 });
 
-app.post('/render-note', (req, res) => {
-  const markdownContent = req.body.content;
 
+app.post('/render-note', (req, res) => {
+  const { content } = req.body;
   try {
-    const htmlContent = marked(markdownContent);
+    const htmlContent = marked(content);
     res.json({ html: htmlContent });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: 'error', message: 'Failed to render the note' });
   }
 });
+
+module.exports = app;
