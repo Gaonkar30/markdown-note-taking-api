@@ -6,6 +6,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const axios = require("axios");
 const upload = multer({ dest: "uploads/" });
+const marked = require('marked');
 const PORT = 3000 || process.env.PORT;
 app.listen(PORT, () => {
   console.log(`app listening on {PORT}`);
@@ -41,4 +42,16 @@ app.post('/savenote',async(req,res)=>{
     if(err) throw err;
     res.json({ status: 'success', message: 'Note saved successfully' });
   })
-})
+});
+
+app.post('/render-note', (req, res) => {
+  const markdownContent = req.body.content;
+
+  try {
+    const htmlContent = marked(markdownContent);
+    res.json({ html: htmlContent });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: 'error', message: 'Failed to render the note' });
+  }
+});
